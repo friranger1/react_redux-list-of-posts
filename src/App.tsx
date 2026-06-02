@@ -15,11 +15,13 @@ import { client } from './utils/fetchClient';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { setLoading, setError, setUsers } from './features/users/usersSlice';
 import { setHasError, setLoaded, setPosts } from './features/posts/postsSlice';
-import { setCurrentPost } from './features/selectedPost/selectedPost';
+import { setCurrentPost } from './features/selectedPost/selectedPost'; // убедись, что путь к слайсу правильный
 
 export const App: React.FC = () => {
   const selectedPost = useAppSelector(state => state.currentPost);
   const author = useAppSelector(state => state.author);
+
+  const { loading: isUsersLoading } = useAppSelector(state => state.users);
 
   const {
     items: posts,
@@ -64,10 +66,6 @@ export const App: React.FC = () => {
     }
   }, [author]);
 
-  // if (usersLoading) {
-  //   return <Loader />;
-  // }
-
   return (
     <main className="section">
       <div className="container">
@@ -79,31 +77,50 @@ export const App: React.FC = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {!author && <p data-cy="NoSelectedUser">No user selected</p>}
+                {isUsersLoading && <Loader />}
 
-                {author && !postsLoaded && !postsError && <Loader />}
+                {!isUsersLoading && (
+                  <>
+                    {!author && (
+                      <p data-cy="NoSelectedUser">No user selected</p>
+                    )}
 
-                {author && postsLoaded && postsError && (
-                  <div
-                    className="notification is-danger"
-                    data-cy="PostsLoadingError"
-                  >
-                    Something went wrong!
-                  </div>
-                )}
+                    {author && !postsLoaded && !postsError && <Loader />}
 
-                {author && postsLoaded && !postsError && posts.length === 0 && (
-                  <div className="notification is-warning" data-cy="NoPostsYet">
-                    No posts yet
-                  </div>
-                )}
+                    {author && postsLoaded && postsError && (
+                      <div
+                        className="notification is-danger"
+                        data-cy="PostsLoadingError"
+                      >
+                        Something went wrong!
+                      </div>
+                    )}
 
-                {author && postsLoaded && !postsError && posts.length > 0 && (
-                  <PostsList
-                    posts={posts}
-                    selectedPostId={selectedPost?.id}
-                    onPostSelected={post => dispatch(setCurrentPost(post))}
-                  />
+                    {author &&
+                      postsLoaded &&
+                      !postsError &&
+                      posts.length === 0 && (
+                        <div
+                          className="notification is-warning"
+                          data-cy="NoPostsYet"
+                        >
+                          No posts yet
+                        </div>
+                      )}
+
+                    {author &&
+                      postsLoaded &&
+                      !postsError &&
+                      posts.length > 0 && (
+                        <PostsList
+                          posts={posts}
+                          selectedPostId={selectedPost?.id}
+                          onPostSelected={post =>
+                            dispatch(setCurrentPost(post))
+                          }
+                        />
+                      )}
+                  </>
                 )}
               </div>
             </div>
