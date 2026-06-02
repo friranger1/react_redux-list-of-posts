@@ -15,12 +15,12 @@ import { client } from './utils/fetchClient';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { setLoading, setError, setUsers } from './features/users/usersSlice';
 import { setHasError, setLoaded, setPosts } from './features/posts/postsSlice';
-import { setCurrentPost } from './features/selectedPost/selectedPost'; // убедись, что путь к слайсу правильный
+import { setCurrentPost } from './features/selectedPost/selectedPost';
 
 export const App: React.FC = () => {
+  const dispatch = useAppDispatch();
   const selectedPost = useAppSelector(state => state.currentPost);
   const author = useAppSelector(state => state.author);
-
   const { loading: isUsersLoading } = useAppSelector(state => state.users);
 
   const {
@@ -28,8 +28,6 @@ export const App: React.FC = () => {
     loaded: postsLoaded,
     hasError: postsError,
   } = useAppSelector(state => state.posts);
-
-  const dispatch = useAppDispatch();
 
   function loadUserPosts(userId: number) {
     dispatch(setLoaded(false));
@@ -79,49 +77,47 @@ export const App: React.FC = () => {
               <div className="block" data-cy="MainContent">
                 {isUsersLoading && <Loader />}
 
-                {!isUsersLoading && (
-                  <>
-                    {!author && (
-                      <p data-cy="NoSelectedUser">No user selected</p>
-                    )}
-
-                    {author && !postsLoaded && !postsError && <Loader />}
-
-                    {author && postsLoaded && postsError && (
-                      <div
-                        className="notification is-danger"
-                        data-cy="PostsLoadingError"
-                      >
-                        Something went wrong!
-                      </div>
-                    )}
-
-                    {author &&
-                      postsLoaded &&
-                      !postsError &&
-                      posts.length === 0 && (
-                        <div
-                          className="notification is-warning"
-                          data-cy="NoPostsYet"
-                        >
-                          No posts yet
-                        </div>
-                      )}
-
-                    {author &&
-                      postsLoaded &&
-                      !postsError &&
-                      posts.length > 0 && (
-                        <PostsList
-                          posts={posts}
-                          selectedPostId={selectedPost?.id}
-                          onPostSelected={post =>
-                            dispatch(setCurrentPost(post))
-                          }
-                        />
-                      )}
-                  </>
+                {!isUsersLoading && !author && (
+                  <p data-cy="NoSelectedUser">No user selected</p>
                 )}
+
+                {!isUsersLoading && author && !postsLoaded && !postsError && (
+                  <Loader />
+                )}
+
+                {!isUsersLoading && author && postsLoaded && postsError && (
+                  <div
+                    className="notification is-danger"
+                    data-cy="PostsLoadingError"
+                  >
+                    Something went wrong!
+                  </div>
+                )}
+
+                {!isUsersLoading &&
+                  author &&
+                  postsLoaded &&
+                  !postsError &&
+                  posts.length === 0 && (
+                    <div
+                      className="notification is-warning"
+                      data-cy="NoPostsYet"
+                    >
+                      No posts yet
+                    </div>
+                  )}
+
+                {!isUsersLoading &&
+                  author &&
+                  postsLoaded &&
+                  !postsError &&
+                  posts.length > 0 && (
+                    <PostsList
+                      posts={posts}
+                      selectedPostId={selectedPost?.id}
+                      onPostSelected={post => dispatch(setCurrentPost(post))}
+                    />
+                  )}
               </div>
             </div>
           </div>
