@@ -6,7 +6,6 @@ import { setAuthor } from '../features/author/authorSlice';
 
 export const UserSelector: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
-
   const { users, loading } = useAppSelector((state: RootState) => state.users);
   const author = useAppSelector(state => state.author);
   const dispatch = useAppDispatch();
@@ -38,7 +37,6 @@ export const UserSelector: React.FC = () => {
           className="button"
           aria-haspopup="true"
           aria-controls="dropdown-menu"
-          // Если идет загрузка, отключаем кнопку, чтобы на неё нельзя было нажать
           disabled={loading}
           onClick={e => {
             e.stopPropagation();

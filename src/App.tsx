@@ -21,8 +21,6 @@ export const App: React.FC = () => {
   const selectedPost = useAppSelector(state => state.currentPost);
   const author = useAppSelector(state => state.author);
 
-  const { users, loading: usersLoading } = useAppSelector(state => state.users);
-
   const {
     items: posts,
     loaded: postsLoaded,
