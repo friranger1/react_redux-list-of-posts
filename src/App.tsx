@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import classNames from 'classnames';
 
 import 'bulma/css/bulma.css';
@@ -11,37 +11,64 @@ import { UserSelector } from './components/UserSelector';
 import { Loader } from './components/Loader';
 import { getUserPosts } from './api/posts';
 import { User } from './types/User';
-import { Post } from './types/Post';
+import { client } from './utils/fetchClient';
+import { useAppDispatch, useAppSelector } from './app/hooks';
+import { setLoading, setError, setUsers } from './features/users/usersSlice';
+import { setHasError, setLoaded, setPosts } from './features/posts/postsSlice';
+import { setCurrentPost } from './features/selectedPost/selectedPost';
 
 export const App: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [hasError, setError] = useState(false);
+  const selectedPost = useAppSelector(state => state.currentPost);
+  const author = useAppSelector(state => state.author);
 
-  const [author, setAuthor] = useState<User | null>(null);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const { users, loading: usersLoading } = useAppSelector(state => state.users);
+
+  const {
+    items: posts,
+    loaded: postsLoaded,
+    hasError: postsError,
+  } = useAppSelector(state => state.posts);
+
+  const dispatch = useAppDispatch();
 
   function loadUserPosts(userId: number) {
-    setLoaded(false);
+    dispatch(setLoaded(false));
+    dispatch(setHasError(false));
 
     getUserPosts(userId)
-      .then(setPosts)
-      .catch(() => setError(true))
-      // We disable the spinner in any case
-      .finally(() => setLoaded(true));
+      .then(data => dispatch(setPosts(data)))
+      .catch(() => dispatch(setHasError(true)))
+      .finally(() => {
+        dispatch(setLoaded(true));
+      });
   }
 
   useEffect(() => {
-    // we clear the post when an author is changed
-    // not to confuse the user
-    setSelectedPost(null);
+    dispatch(setLoading(true));
+
+    client
+      .get<User[]>('/users')
+      .then(data => {
+        dispatch(setUsers(data));
+      })
+      .catch(e => dispatch(setError(e?.message || 'Error')))
+      .finally(() => dispatch(setLoading(false)));
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(setCurrentPost(null));
 
     if (author) {
       loadUserPosts(author.id);
     } else {
-      setPosts([]);
+      dispatch(setPosts([]));
+      dispatch(setLoaded(true));
     }
   }, [author]);
+
+  // if (usersLoading) {
+  //   return <Loader />;
+  // }
 
   return (
     <main className="section">
@@ -50,15 +77,15 @@ export const App: React.FC = () => {
           <div className="tile is-parent">
             <div className="tile is-child box is-success">
               <div className="block">
-                <UserSelector value={author} onChange={setAuthor} />
+                <UserSelector />
               </div>
 
               <div className="block" data-cy="MainContent">
                 {!author && <p data-cy="NoSelectedUser">No user selected</p>}
 
-                {author && !loaded && <Loader />}
+                {author && !postsLoaded && !postsError && <Loader />}
 
-                {author && loaded && hasError && (
+                {author && postsLoaded && postsError && (
                   <div
                     className="notification is-danger"
                     data-cy="PostsLoadingError"
@@ -67,17 +94,17 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
-                {author && loaded && !hasError && posts.length === 0 && (
+                {author && postsLoaded && !postsError && posts.length === 0 && (
                   <div className="notification is-warning" data-cy="NoPostsYet">
                     No posts yet
                   </div>
                 )}
 
-                {author && loaded && !hasError && posts.length > 0 && (
+                {author && postsLoaded && !postsError && posts.length > 0 && (
                   <PostsList
                     posts={posts}
                     selectedPostId={selectedPost?.id}
-                    onPostSelected={setSelectedPost}
+                    onPostSelected={post => dispatch(setCurrentPost(post))}
                   />
                 )}
               </div>
