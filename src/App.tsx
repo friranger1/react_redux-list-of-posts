@@ -62,7 +62,17 @@ export const App: React.FC = () => {
       dispatch(setPosts([]));
       dispatch(setLoaded(true));
     }
-  }, [author]);
+  }, [author, dispatch, loadUserPosts]);
+
+  const showNoPostsNotification =
+    !isUsersLoading &&
+    author &&
+    postsLoaded &&
+    !postsError &&
+    posts.length === 0;
+
+  const shouldShowPosts =
+    !isUsersLoading && author && postsLoaded && !postsError && posts.length > 0;
 
   return (
     <main className="section">
@@ -94,30 +104,19 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
-                {!isUsersLoading &&
-                  author &&
-                  postsLoaded &&
-                  !postsError &&
-                  posts.length === 0 && (
-                    <div
-                      className="notification is-warning"
-                      data-cy="NoPostsYet"
-                    >
-                      No posts yet
-                    </div>
-                  )}
+                {showNoPostsNotification && (
+                  <div className="notification is-warning" data-cy="NoPostsYet">
+                    No posts yet
+                  </div>
+                )}
 
-                {!isUsersLoading &&
-                  author &&
-                  postsLoaded &&
-                  !postsError &&
-                  posts.length > 0 && (
-                    <PostsList
-                      posts={posts}
-                      selectedPostId={selectedPost?.id}
-                      onPostSelected={post => dispatch(setCurrentPost(post))}
-                    />
-                  )}
+                {shouldShowPosts && (
+                  <PostsList
+                    posts={posts}
+                    selectedPostId={selectedPost?.id}
+                    onPostSelected={post => dispatch(setCurrentPost(post))}
+                  />
+                )}
               </div>
             </div>
           </div>
