@@ -62,7 +62,7 @@ export const App: React.FC = () => {
       dispatch(setPosts([]));
       dispatch(setLoaded(true));
     }
-  }, [author, dispatch, loadUserPosts]);
+  }, [author]);
 
   const showNoPostsNotification =
     !isUsersLoading &&
